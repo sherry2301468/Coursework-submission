@@ -1,0 +1,193 @@
+#include <iostream>
+#include <iomanip>
+#include <ctime>
+#include <cstdlib>
+#include <fstream>
+#include <windows.h>
+using namespace std;
+
+// ---------------- Sorting Functions ---------------- //
+
+int bubble_sort_count(int arr[], int n) {
+    int comparisons = 0;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            comparisons++;
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+    return comparisons;
+}
+
+int selection_sort_count(int arr[], int n) {
+    int comparisons = 0;
+    for (int i = 0; i < n - 1; i++) {
+        int minIndex = i;
+        for (int j = i + 1; j < n; j++) {
+            comparisons++;
+            if (arr[j] < arr[minIndex])
+                minIndex = j;
+        }
+        int temp = arr[i];
+        arr[i] = arr[minIndex];
+        arr[minIndex] = temp;
+    }
+    return comparisons;
+}
+
+int insertion_sort_count(int arr[], int n) {
+    int comparisons = 0;
+    for (int i = 1; i < n; i++) {
+        int key = arr[i];
+        int j = i - 1;
+        while (j >= 0) {
+            comparisons++;
+            if (arr[j] > key)
+                arr[j + 1] = arr[j];
+            else
+                break;
+            j--;
+        }
+        arr[j + 1] = key;
+    }
+    return comparisons;
+}
+
+// ---------------- Helper Functions ---------------- //
+
+void copy_array(int src[], int dest[], int n) {
+    for (int i = 0; i < n; i++) dest[i] = src[i];
+}
+
+void generate_random_array(int arr[], int n) {
+    for (int i = 0; i < n; i++)
+        arr[i] = rand() % 100;
+}
+
+void generate_sorted_array(int arr[], int n) {
+    for (int i = 0; i < n; i++)
+        arr[i] = i;
+}
+
+void generate_reverse_array(int arr[], int n) {
+    for (int i = 0; i < n; i++)
+        arr[i] = n - i;
+}
+
+// ---------------- Testing Function ---------------- //
+
+void test_comparisons() {
+    srand(time(NULL));
+
+    ofstream compFile("comparisons.csv");
+    ofstream timeFile("times.csv");
+
+    compFile << "ArrayType,Size,Bubble,Selection,Insertion\n";
+    timeFile << "ArrayType,Size,Bubble,Selection,Insertion\n";
+
+    cout << fixed << setprecision(8);
+    cout << left << setw(15) << "Array Type"
+        << setw(8) << "Size"
+        << setw(15) << "Bubble C"
+        << setw(15) << "Selection C"
+        << setw(15) << "Insertion C"
+        << setw(15) << "Bubble T(s)"
+        << setw(15) << "Selection T(s)"
+        << setw(15) << "Insertion T(s)" << endl;
+    cout << string(100, '-') << endl;
+
+    int arr[30], temp[30];
+    const char* types[] = { "Random", "Sorted", "Reverse" };
+    int repeats = 1000;
+
+    for (int t = 0; t < 3; t++) {
+        for (int n = 1; n <= 30; n++) {
+            if (t == 0) generate_random_array(arr, n);
+            else if (t == 1) generate_sorted_array(arr, n);
+            else generate_reverse_array(arr, n);
+
+            clock_t start;
+            int b_comp = 0, s_comp = 0, i_comp = 0;
+            double b_time, s_time, i_time;
+
+            // --- Bubble ---
+            start = clock();
+            for (int r = 0; r < repeats; r++) {
+                copy_array(arr, temp, n);
+                b_comp += bubble_sort_count(temp, n);
+            }
+            b_time = double(clock() - start) / CLOCKS_PER_SEC / repeats;
+            b_comp /= repeats;
+
+            // --- Selection ---
+            start = clock();
+            for (int r = 0; r < repeats; r++) {
+                copy_array(arr, temp, n);
+                s_comp += selection_sort_count(temp, n);
+            }
+            s_time = double(clock() - start) / CLOCKS_PER_SEC / repeats;
+            s_comp /= repeats;
+
+            // --- Insertion ---
+            start = clock();
+            for (int r = 0; r < repeats; r++) {
+                copy_array(arr, temp, n);
+                i_comp += insertion_sort_count(temp, n);
+            }
+            i_time = double(clock() - start) / CLOCKS_PER_SEC / repeats;
+            i_comp /= repeats;
+
+            cout << left << setw(15) << types[t]
+                << setw(8) << n
+                << setw(15) << b_comp
+                << setw(15) << s_comp
+                << setw(15) << i_comp
+                << setw(15) << b_time
+                << setw(15) << s_time
+                << setw(15) << i_time
+                << endl;
+
+            compFile << types[t] << "," << n << "," << b_comp << "," << s_comp << "," << i_comp << "\n";
+            timeFile << types[t] << "," << n << ","
+                << fixed << setprecision(9)
+                << b_time << "," << s_time << "," << i_time << "\n";
+        }
+    }
+
+    compFile.close();
+    timeFile.close();
+
+    // --- VBScript to create Excel workbook and open it ---
+    ofstream vbs("create_excel.vbs");
+    vbs << "Set xl = CreateObject(\"Excel.Application\")\n";
+    vbs << "xl.Visible = True\n";
+    vbs << "Set wb = xl.Workbooks.Add()\n";
+    vbs << "Set ws1 = wb.Sheets(1)\n";
+    vbs << "ws1.Name = \"Comparisons\"\n";
+    vbs << "ws1.QueryTables.Add \"TEXT;comparisons.csv\", ws1.Range(\"A1\")\n";
+    vbs << "ws1.QueryTables(1).TextFileParseType = 1\n";
+    vbs << "ws1.QueryTables(1).TextFileCommaDelimiter = True\n";
+    vbs << "ws1.QueryTables(1).Refresh\n";
+    vbs << "Set ws2 = wb.Sheets.Add()\n";
+    vbs << "ws2.Name = \"Times\"\n";
+    vbs << "ws2.QueryTables.Add \"TEXT;times.csv\", ws2.Range(\"A1\")\n";
+    vbs << "ws2.QueryTables(1).TextFileParseType = 1\n";
+    vbs << "ws2.QueryTables(1).TextFileCommaDelimiter = True\n";
+    vbs << "ws2.QueryTables(1).Refresh\n";
+    vbs << "wb.SaveAs CreateObject(\"Scripting.FileSystemObject\").GetAbsolutePathName(\"SortingResults.xlsx\")\n";
+    vbs << "xl.Visible = True\n";
+    vbs.close();
+
+    system("wscript.exe create_excel.vbs");
+}
+
+// ---------------- Main ---------------- //
+
+int main() {
+    test_comparisons();
+    return 0;
+}
