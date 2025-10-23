@@ -5,7 +5,6 @@ void restrictedHanoi(int n, char from, char to, char aux) {
     if (n == 0)
         return;
 
-    // if we are moving from A to C, we must go through B
     if ((from == 'A' && to == 'C') || (from == 'C' && to == 'A')) {
         restrictedHanoi(n - 1, from, to, aux); // move smaller disks recursively
         cout << "Move disk " << n << " from " << from << " to " << aux << endl;
@@ -14,7 +13,6 @@ void restrictedHanoi(int n, char from, char to, char aux) {
         restrictedHanoi(n - 1, from, to, aux);
     }
     else {
-        // Normal move through the allowed peg
         restrictedHanoi(n - 1, from, aux, to);
         cout << "Move disk " << n << " from " << from << " to " << to << endl;
         restrictedHanoi(n - 1, aux, to, from);
