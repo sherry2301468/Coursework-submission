@@ -1,0 +1,90 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+struct Node {
+    string key;
+    Node* left;
+    Node* right;
+    int height;
+    Node(string k) { key = k; left = right = NULL; height = 1; }
+};
+
+int height(Node* n) { return n ? n->height : 0; }
+
+Node* rotateRight(Node* y) {
+    Node* x = y->left;
+    Node* t = x->right;
+    x->right = y;
+    y->left = t;
+    y->height = max(height(y->left), height(y->right)) + 1;
+    x->height = max(height(x->left), height(x->right)) + 1;
+    return x;
+}
+
+Node* rotateLeft(Node* x) {
+    Node* y = x->right;
+    Node* t = y->left;
+    y->left = x;
+    x->right = t;
+    x->height = max(height(x->left), height(x->right)) + 1;
+    y->height = max(height(y->left), height(y->right)) + 1;
+    return y;
+}
+
+Node* insert(Node* node, string key) {
+    if (!node) return new Node(key);
+    if (key < node->key) node->left = insert(node->left, key);
+    else if (key > node->key) node->right = insert(node->right, key);
+    else return node;
+    node->height = 1 + max(height(node->left), height(node->right));
+    int balance = height(node->left) - height(node->right);
+    if (balance > 1 && key < node->left->key) return rotateRight(node);
+    if (balance < -1 && key > node->right->key) return rotateLeft(node);
+    if (balance > 1 && key > node->left->key) { node->left = rotateLeft(node->left); return rotateRight(node); }
+    if (balance < -1 && key < node->right->key) { node->right = rotateRight(node->right); return rotateLeft(node); }
+    return node;
+}
+
+string toLower(const string& s) {
+    string res = s;
+    transform(res.begin(), res.end(), res.begin(), ::tolower);
+    return res;
+}
+
+void findAllWithPrefix(Node* root, const string& prefix, vector<string>& out) {
+    if (!root) return;
+    string nodeKeyLower = toLower(root->key);
+    string prefixLower = toLower(prefix);
+    if (nodeKeyLower.substr(0, prefixLower.size()) == prefixLower) out.push_back(root->key);
+    if (prefixLower <= nodeKeyLower) findAllWithPrefix(root->left, prefix, out);
+    if (prefixLower >= nodeKeyLower) findAllWithPrefix(root->right, prefix, out);
+}
+
+int main() {
+    Node* root = NULL;
+    ifstream f("C:\\Users\\meeka\\OneDrive\\Desktop\\dictionary\\dictionary.txt");
+    if (!f.is_open()) { cout << "File not found!" << endl; return 1; }
+    string w;
+    while (f >> w) root = insert(root, w);
+    f.close();
+
+    while (true) {
+        cout << "Type a prefix (or 'exit' to quit): ";
+        string typed;
+        getline(cin, typed);
+        if (typed == "exit") break;
+        vector<string> result;
+        findAllWithPrefix(root, typed, result);
+        sort(result.begin(), result.end());
+        int limit = min(10, (int)result.size());
+        if (limit == 0) cout << "No words found." << endl;
+        else {
+            for (int i = 0; i < limit; i++) cout << result[i] << endl;
+        }
+        cout << "----" << endl;
+    }
+}
