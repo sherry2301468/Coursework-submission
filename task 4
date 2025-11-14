@@ -1,0 +1,50 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+void bubbleSort(string& word) {
+    int length = word.length();
+    for (int i = 0; i < length - 1; i++) {
+        for (int j = 0; j < length - i - 1; j++) {
+            if (word[j] > word[j + 1]) {
+                char temp = word[j];
+                word[j] = word[j + 1];
+                word[j + 1] = temp;
+            }
+        }
+    }
+}
+
+bool checkAnagram(string firstWord, string secondWord) {
+    if (firstWord.length() != secondWord.length()) {
+        return false;
+    }
+
+    for (int i = 0; i < firstWord.length(); i++) {
+        firstWord[i] = tolower(firstWord[i]);
+        secondWord[i] = tolower(secondWord[i]);
+    }
+
+    bubbleSort(firstWord);
+    bubbleSort(secondWord);
+
+    return firstWord == secondWord;
+}
+
+int main() {
+    string word1, word2;
+
+    cout << "Enter the first word: ";
+    cin >> word1;
+    cout << "Enter the second word: ";
+    cin >> word2;
+
+    if (checkAnagram(word1, word2)) {
+        cout << word1 << " and " << word2 << " are anagrams." << endl;
+    }
+    else {
+        cout << word1 << " and " << word2 << " are not anagrams." << endl;
+    }
+
+    return 0;
+}
