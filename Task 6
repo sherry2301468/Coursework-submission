@@ -15,42 +15,24 @@ string determineFakeNature(const vector<int>& w) {
 
     if (first == 0) {
         int second = weigh(A, C, w);
-        if (second == 1) return "Fake coin is heavier.";
-        if (second == -1) return "Fake coin is lighter.";
-
-        for (int i = 3; i < w.size(); i++) {
-            int t = weigh(A, i, w);
-            if (t == 1) return "Fake coin is heavier.";
-            if (t == -1) return "Fake coin is lighter.";
-        }
-
-        return "Unable to determine.";
+        if (second == 1) return "Coin C is lighter.";
+        if (second == -1) return "Coin C is heavier.";
+        return "All three coins have equal weight.";
     }
 
     int second = weigh(A, C, w);
 
     if (second == 0) {
-        if (first == 1) return "Fake coin is lighter.";
-        return "Fake coin is heavier.";
+        if (first == 1) return "Coin B is lighter.";
+        else return "Coin B is heavier.";
+    } else {
+        if (second == 1) return "Coin A is lighter.";
+        else return "Coin A is heavier.";
     }
-
-    if (first == 1) return "Fake coin is heavier.";
-    return "Fake coin is lighter.";
 }
 
 int main() {
-    int n;
-    cout << "Enter number of coins: ";
-    cin >> n;
-
-    vector<int> coins(n, 10);
-
-    int fakeIndex = n - 1;
-    int type = 0;
-
-    if (type == 0) coins[fakeIndex] = 9;
-    else coins[fakeIndex] = 11;
-
+    vector<int> coins = {10, 10, 9};
     cout << determineFakeNature(coins) << endl;
     return 0;
 }
