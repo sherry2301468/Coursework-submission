@@ -1,0 +1,165 @@
+#include <iostream>
+#include <vector>
+#include <string>
+using namespace std;
+
+/*
+    This function checks if the current configuration
+    is a solved state.
+    A stack is correct if:
+    - It is empty, OR
+    - It is full and all balls have the same color
+*/
+bool isSolved(const vector<vector<string>> &stacks, int capacity) {
+    for (int i = 0; i < stacks.size(); i++) {
+        if (stacks[i].empty())
+            continue;
+
+        if (stacks[i].size() != capacity)
+            return false;
+
+        string color = stacks[i][0];
+        for (int j = 0; j < stacks[i].size(); j++) {
+            if (stacks[i][j] != color)
+                return false;
+        }
+    }
+    return true;
+}
+
+/*
+    This function converts the current state of stacks
+    into a single string so we can store it in visited states.
+*/
+string stateToString(const vector<vector<string>> &stacks) {
+    string s = "";
+    for (int i = 0; i < stacks.size(); i++) {
+        s += "|";
+        for (int j = 0; j < stacks[i].size(); j++) {
+            s += stacks[i][j] + ",";
+        }
+    }
+    return s;
+}
+
+/*
+    This function prints the current stacks
+    so we can see step-by-step moves.
+*/
+void printStacks(const vector<vector<string>> &stacks) {
+    cout << endl;
+    for (int i = 0; i < stacks.size(); i++) {
+        cout << "Stack " << i << ": ";
+        for (int j = 0; j < stacks[i].size(); j++) {
+            cout << stacks[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
+/*
+    This is the DFS function that tries all possible moves
+    and backtracks if a move does not lead to a solution.
+*/
+bool dfs(vector<vector<string>> &stacks,
+         int capacity,
+         vector<string> &visited) {
+
+    // If goal state reached, stop
+    if (isSolved(stacks, capacity)) {
+        cout << "\nSolved!\n";
+        printStacks(stacks);
+        return true;
+    }
+
+    // Convert state to string and check if visited before
+    string currentState = stateToString(stacks);
+    for (int i = 0; i < visited.size(); i++) {
+        if (visited[i] == currentState)
+            return false;
+    }
+    visited.push_back(currentState);
+
+    int n = stacks.size();
+
+    /*
+        Try moving the top ball from stack i
+        to stack j if the move is valid
+    */
+    for (int i = 0; i < n; i++) {
+        if (stacks[i].empty())
+            continue;
+
+        for (int j = 0; j < n; j++) {
+            if (i == j)
+                continue;
+
+            // Check capacity and color rule
+            if (stacks[j].size() < capacity &&
+                (stacks[j].empty() ||
+                 stacks[j].back() == stacks[i].back())) {
+
+                // Make the move
+                string ball = stacks[i].back();
+                stacks[i].pop_back();
+                stacks[j].push_back(ball);
+
+                printStacks(stacks);
+
+                // Recursive DFS call
+                if (dfs(stacks, capacity, visited))
+                    return true;
+
+                // Undo move (backtracking)
+                stacks[j].pop_back();
+                stacks[i].push_back(ball);
+            }
+        }
+    }
+
+    return false;
+}
+
+int main() {
+    int numStacks, capacity;
+
+    /*
+        Take basic input from the user
+    */
+    cout << "Enter number of stacks: ";
+    cin >> numStacks;
+
+    cout << "Enter balls per stack: ";
+    cin >> capacity;
+
+    vector<vector<string>> stacks(numStacks);
+
+    /*
+        Build initial stacks
+        User enters colors from top to bottom
+        Use 'empty' if there is no ball
+    */
+    cout << "\nEnter stack colors (top to bottom):\n";
+    for (int i = 0; i < numStacks; i++) {
+        cout << "Stack " << i << ": ";
+        for (int j = 0; j < capacity; j++) {
+            string color;
+            cin >> color;
+            if (color != "empty")
+                stacks[i].push_back(color);
+        }
+    }
+
+    cout << "\nInitial State:\n";
+    printStacks(stacks);
+
+    vector<string> visited;
+
+    cout << "\nSolving...\n";
+
+    if (!dfs(stacks, capacity, visited)) {
+        cout << "\nNo solution found.\n";
+    }
+
+    return 0;
+}
