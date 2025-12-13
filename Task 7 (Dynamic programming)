@@ -1,0 +1,111 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+// Class to represent an item 
+// Each item has a name and a price
+class Item {
+private:
+    string name; // Name of the item
+    int price;   // Price of the item
+
+public:
+    // Constructor to create an item
+    Item(string n, int p) {
+        name = n;
+        price = p;
+    }
+
+    // Getter for the name
+    string getName() const {
+        return name;
+    }
+
+    // Getter for the price
+    int getPrice() const {
+        return price;
+    }
+};
+
+// Finds the optimal set of items to maximize number of items
+// Uses classic 0/1 knapsack approach
+vector<Item> dpKnapsack(int budget, const vector<Item>& items, int& totalCost) {
+    int n = items.size();
+
+    // dp[i][w] = max number of items we can pick using first i items with budget w
+    vector<vector<int>> dp(n + 1, vector<int>(budget + 1, 0));
+
+    // Fill the dp table
+    for (int i = 1; i <= n; i++) {
+        int price = items[i - 1].getPrice();
+        for (int w = 0; w <= budget; w++) {
+            if (price <= w) {
+                // Either we take this item or we don't, pick the better choice
+                dp[i][w] = max(dp[i - 1][w], 1 + dp[i - 1][w - price]);
+            } else {
+                dp[i][w] = dp[i - 1][w]; // Can't take this item, just carry forward
+            }
+        }
+    }
+
+    // Backtracking to find which items were selected 
+    vector<Item> selectedItems;
+    int w = budget;
+    for (int i = n; i > 0; i--) {
+        if (dp[i][w] != dp[i - 1][w]) {
+            // Item i-1 was included
+            selectedItems.push_back(items[i - 1]);
+            w -= items[i - 1].getPrice();
+        }
+    }
+
+    reverse(selectedItems.begin(), selectedItems.end()); // Keep original order
+
+    // Calculate total cost of selected items
+    totalCost = 0;
+    for (const Item& item : selectedItems)
+        totalCost += item.getPrice();
+
+    return selectedItems;
+}
+
+
+int main() {
+    cout << "Shopping Optimizer\n";
+
+    int budget;
+    cout << "Enter your shopping budget: ";
+    cin >> budget;
+
+    vector<Item> items; // Store all items user wants
+
+    // Input items interactively
+    while (true) {
+        string name;
+        cout << "Enter item name (or 'done' to finish): ";
+        cin >> name;
+
+        if (name == "done")
+            break;
+
+        int price;
+        cout << "Enter price of " << name << ": ";
+        cin >> price;
+
+        items.emplace_back(name, price);
+    }
+
+    int totalCost;
+    vector<Item> selectedItems = dpKnapsack(budget, items, totalCost);
+
+    // Display selected items
+    cout << "\nItems selected using Dynamic Programming:\n";
+    for (const Item& item : selectedItems)
+        cout << "- " << item.getName() << " (" << item.getPrice() << ")\n";
+
+    cout << "Total cost: " << totalCost << endl;
+
+    return 0;
+}
+
