@@ -1,0 +1,94 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+// Class to represent an item
+// Each item has a name and a price
+class Item {
+private:
+    string name;   // Name of the item
+    int price;     // Price of the item
+
+public:
+    // Constructor to create an item
+    Item(string n, int p) {
+        name = n;
+        price = p;
+    }
+
+    // Getter for the name
+    string getName() const {
+        return name;
+    }
+
+    // Getter for the price
+    int getPrice() const {
+        return price;
+    }
+};
+
+// Function to help sort items by price
+// We'll pick cheapest items first in the greedy algorithm
+bool compareByPrice(const Item& a, const Item& b) {
+    return a.getPrice() < b.getPrice();
+}
+
+// Greedy Knapsack Function 
+// Takes a budget and list of items, returns which items to buy
+// Simple greedy: pick cheapest items first until budget runs out
+vector<Item> greedyKnapsack(int budget, vector<Item> items, int& totalCost) {
+    sort(items.begin(), items.end(), compareByPrice); // Sort items from cheapest to most expensive
+
+    vector<Item> selectedItems; // This will store the items we actually pick
+    totalCost = 0;              // Keep track of how much money we spend
+
+    // Loop through items and pick them if we can afford them
+    for (const Item& item : items) {
+        if (totalCost + item.getPrice() <= budget) {
+            selectedItems.push_back(item);       // Add item to our list
+            totalCost += item.getPrice();        // Update total cost
+        }
+    }
+
+    return selectedItems; // Return our selection
+}
+
+// Main Program 
+int main() {
+    cout << "=== Shopping Optimizer (Greedy Knapsack) ===\n";
+
+    int budget;
+    cout << "Enter your shopping budget: ";
+    cin >> budget;
+
+    vector<Item> items; // This will store all items the user wants
+
+    // Keep asking user to enter items until they type "done"
+    while (true) {
+        string name;
+        cout << "Enter item name (or 'done' to finish): ";
+        cin >> name;
+
+        if (name == "done")
+            break;
+
+        int price;
+        cout << "Enter price of " << name << ": ";
+        cin >> price;
+
+        items.emplace_back(name, price); // Add item to the list
+    }
+
+    int totalCost;
+    vector<Item> selectedItems = greedyKnapsack(budget, items, totalCost);
+
+    // Display the selected items to the user
+    cout << "\nItems selected using Greedy Algorithm:\n";
+    for (const Item& item : selectedItems)
+        cout << "- " << item.getName() << " (" << item.getPrice() << ")\n";
+
+    cout << "Total cost: " << totalCost << endl;
+
+    return 0;
+}
